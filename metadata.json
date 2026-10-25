@@ -1,0 +1,6 @@
+{
+  "name": "Xadrez 3D Brasil - Arena dos Campeões",
+  "description": "Webapp de xadrez 3D completo em português com regras da FIDE, modo PVP local e online, IA Stockfish e visual cinematográfico.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
