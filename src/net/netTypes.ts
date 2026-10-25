@@ -1,5 +1,6 @@
 import type { Square, PieceSymbol, Color } from 'chess.js';
 import type { ClockSettings } from '../game/chessTypes';
+import type { PlainMove } from '../game/replay';
 
 export type NetConnectionStatus =
   | 'disconnected'
@@ -16,7 +17,16 @@ export interface NetPlayerInfo {
 }
 
 export type NetMessage =
-  | { type: 'INIT_SYNC'; clockSettings: ClockSettings; hostColor: Color; fen: string }
+  | {
+      type: 'INIT_SYNC';
+      clockSettings: ClockSettings;
+      hostColor: Color;
+      fen: string;
+      /** Histórico completo da partida (para reconexão no meio do jogo). */
+      moves?: PlainMove[];
+      whiteTime?: number;
+      blackTime?: number;
+    }
   | { type: 'MOVE'; from: Square; to: Square; promotion?: PieceSymbol }
   | { type: 'SYNC_TIME'; whiteTime: number; blackTime: number }
   | { type: 'OFFER_DRAW' }

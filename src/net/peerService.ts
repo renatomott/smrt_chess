@@ -16,6 +16,13 @@ const ICE_CONFIG = {
   iceCandidatePoolSize: 10,
 };
 
+// Token de sessão do convidado: permite reconectar na mesma sala sem que um terceiro assuma o lugar.
+function generateSessionToken(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 export function generateRoomCode(): string {
   let result = '';
   for (let i = 0; i < 5; i++) {
@@ -30,6 +37,11 @@ export class PeerService {
   private roomCode: string | null = null;
   private isHost = false;
   private pingInterval: any = null;
+
+  // Convidado: token enviado ao conectar. Anfitrião: token do único convidado aceito na sala.
+  private sessionToken: string | null = null;
+  private sessionCode: string | null = null;
+  private acceptedToken: string | null = null;
 
   public status: NetConnectionStatus = 'disconnected';
   public latency = 0;
@@ -74,7 +86,25 @@ export class PeerService {
       });
 
       this.peer.on('connection', (connection) => {
+        const token = (connection.metadata as { token?: string } | undefined)?.token;
+
+        // Sala de 2 jogadores: recusa quem não tem credencial ou não é o convidado já aceito.
+        if (!token || (this.acceptedToken && token !== this.acceptedToken)) {
+          try {
+            connection.close();
+          } catch {}
+          return;
+        }
+
+        this.acceptedToken = token;
+        // Mesmo convidado reconectando: a conexão antiga é substituída.
+        const previous = this.conn;
         this.conn = connection;
+        if (previous && previous !== connection) {
+          try {
+            previous.close();
+          } catch {}
+        }
         this.setupConnectionHandlers(connection);
       });
 
@@ -93,8 +123,12 @@ export class PeerService {
 
   // Join existing room as Guest
   public joinRoom(roomCode: string): Promise<void> {
-    this.disconnect();
+    this.teardown();
     const cleanCode = roomCode.trim().toUpperCase();
+    if (!this.sessionToken || this.sessionCode !== cleanCode) {
+      this.sessionToken = generateSessionToken();
+      this.sessionCode = cleanCode;
+    }
     this.roomCode = cleanCode;
     this.isHost = false;
     this.setStatus('connecting');
@@ -109,6 +143,7 @@ export class PeerService {
         const hostPeerId = `${PEER_PREFIX}${cleanCode}`;
         const connection = this.peer!.connect(hostPeerId, {
           reliable: true,
+          metadata: { token: this.sessionToken },
         });
 
         this.conn = connection;
@@ -141,6 +176,7 @@ export class PeerService {
     });
 
     connection.on('data', (data) => {
+      if (this.conn !== connection) return;
       const msg = data as NetMessage;
       if (!msg || !msg.type) return;
 
@@ -164,6 +200,8 @@ export class PeerService {
     });
 
     connection.on('close', () => {
+      // Conexão antiga já substituída por uma reconexão: não mexe no estado atual.
+      if (this.conn !== connection) return;
       this.stopPing();
       this.setStatus('reconnecting');
       // Attempt reconnection if guest
@@ -213,7 +251,16 @@ export class PeerService {
     }
   }
 
+  /** Encerra tudo, inclusive a identidade da sessão (sair da sala). */
   public disconnect() {
+    this.teardown();
+    this.sessionToken = null;
+    this.sessionCode = null;
+    this.acceptedToken = null;
+  }
+
+  /** Fecha a conexão atual mantendo a identidade da sessão (usado ao reconectar). */
+  private teardown() {
     this.stopPing();
     if (this.conn) {
       try {

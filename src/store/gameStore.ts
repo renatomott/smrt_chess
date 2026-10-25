@@ -13,6 +13,7 @@ import type {
 import { stockfishService } from '../engine/stockfishService';
 import type { ComputerDifficulty, HintResult } from '../engine/engineTypes';
 import { peerService } from '../net/peerService';
+import { historyToPlainMoves, replayMoves } from '../game/replay';
 import type { NetConnectionStatus, NetMessage } from '../net/netTypes';
 import {
   playMoveSound,
@@ -249,6 +250,9 @@ const DEFAULT_CLOCK_SETTING: ClockSettings = {
   initialSeconds: 600,
   incrementSeconds: 0,
 };
+
+// Identifica a busca mais recente do computador; resultados de buscas antigas são descartados.
+let computerSearchId = 0;
 
 export const useGameStore = create<GameState>((set, get) => {
   const initialChess = new Chess();
@@ -591,14 +595,40 @@ export const useGameStore = create<GameState>((set, get) => {
       if (gameMode !== 'vs_computer' || status.isOver || isComputerThinking) return;
       if (chess.turn() === assignedPlayerColor) return;
 
+      // Guarda a posição em que a busca começou: se a partida mudou enquanto a engine
+      // "pensava" (novo jogo, desfazer, carregar posição), o lance chegou velho e é descartado.
+      const searchedChess = chess;
+      const searchedFen = chess.fen();
+      const searchId = ++computerSearchId;
+
       set({ isComputerThinking: true });
 
-      const bestMove = await stockfishService.getBestMove(chess.fen(), computerDifficulty);
+      const bestMove = await stockfishService.getBestMove(searchedFen, computerDifficulty);
+
+      // Uma busca mais nova já assumiu o controle: ela cuida do estado.
+      if (searchId !== computerSearchId) return;
+
+      const stale = get().chess !== searchedChess || get().fen !== searchedFen;
+      if (stale) {
+        set({ isComputerThinking: false });
+        return;
+      }
 
       set({ isComputerThinking: false });
 
-      if (bestMove && !get().status.isOver) {
-        makeMove(bestMove.from, bestMove.to, bestMove.promotion || 'q');
+      if (get().status.isOver) return;
+
+      let played = false;
+      if (bestMove) {
+        played = makeMove(bestMove.from, bestMove.to, bestMove.promotion || 'q');
+      }
+
+      // Rede de segurança: se o lance não foi aceito, joga qualquer lance legal para a partida não travar.
+      if (!played) {
+        const fallback = get().chess.moves({ verbose: true })[0];
+        if (fallback) {
+          makeMove(fallback.from as Square, fallback.to as Square, (fallback.promotion as PieceSymbol) || 'q');
+        }
       }
     },
 
@@ -1086,6 +1116,10 @@ function setupPeerListeners(set: any, get: any) {
           clockSettings: state.clockSettings,
           hostColor: state.assignedPlayerColor,
           fen: state.fen,
+          // Se o convidado reconectou no meio da partida, ele recebe o histórico e os relógios atuais.
+          moves: historyToPlainMoves(state.moveHistory),
+          whiteTime: state.whiteTime,
+          blackTime: state.blackTime,
         });
       }
     }
@@ -1100,14 +1134,54 @@ function setupPeerListeners(set: any, get: any) {
 
     if (msg.type === 'INIT_SYNC') {
       const guestColor = msg.hostColor === 'w' ? 'b' : 'w';
-      set({
+      const hostMoves = msg.moves ?? [];
+      const common = {
         clockSettings: msg.clockSettings,
         assignedPlayerColor: guestColor,
         cameraPreset: guestColor === 'b' ? 'black' : 'white',
-        whiteTime: msg.clockSettings.initialSeconds,
-        blackTime: msg.clockSettings.initialSeconds,
-      });
+      };
+
+      const rebuilt = hostMoves.length > 0 ? replayMoves(hostMoves) : null;
+      if (rebuilt) {
+        // Reconexão no meio da partida: adota o histórico e os relógios do anfitrião.
+        const { chess, history } = rebuilt;
+        const { captured, advantage } = calculateCapturedAndMaterial(history);
+        const nextStatus = getGameStatus(chess);
+        const last = history[history.length - 1];
+        set({
+          ...common,
+          chess,
+          fen: chess.fen(),
+          turn: chess.turn(),
+          selectedSquare: null,
+          legalMoves: [],
+          lastMove: last ? { from: last.from, to: last.to } : null,
+          secondaryMove: null,
+          enPassantCapturedSquare: null,
+          moveHistory: history,
+          historyViewIndex: null,
+          capturedPieces: captured,
+          materialAdvantage: advantage,
+          status: nextStatus,
+          pendingPromotion: null,
+          whiteTime: msg.whiteTime ?? msg.clockSettings.initialSeconds,
+          blackTime: msg.blackTime ?? msg.clockSettings.initialSeconds,
+          isClockRunning: msg.clockSettings.preset !== 'none' && !nextStatus.isOver,
+        });
+      } else if (state.moveHistory.length === 0) {
+        // Primeira conexão: partida nova com o relógio inicial do anfitrião.
+        set({
+          ...common,
+          whiteTime: msg.clockSettings.initialSeconds,
+          blackTime: msg.clockSettings.initialSeconds,
+        });
+      } else {
+        // Reconexão sem histórico utilizável: mantém a partida local e só realinha as cores.
+        set({ ...common, whiteTime: msg.whiteTime ?? state.whiteTime, blackTime: msg.blackTime ?? state.blackTime });
+      }
     } else if (msg.type === 'MOVE') {
+      // O adversário só pode mover na vez dele, e só enquanto a partida está em andamento.
+      if (state.status.isOver || state.chess.turn() === state.assignedPlayerColor) return;
       get().makeMove(msg.from, msg.to, msg.promotion, true);
     } else if (msg.type === 'SYNC_TIME') {
       set({

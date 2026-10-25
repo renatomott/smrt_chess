@@ -36,7 +36,8 @@ export const ChessClock: React.FC<{ color: Color; label: string }> = ({ color, l
       const delta = (now - lastTickRef.current) / 1000;
       lastTickRef.current = now;
 
-      if (delta > 0 && delta < 1) {
+      // Sem teto: se a aba ficou em segundo plano (rAF pausado), o tempo decorrido é cobrado ao voltar.
+      if (delta > 0) {
         tickClock(delta);
       }
 
