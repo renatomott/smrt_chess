@@ -145,7 +145,7 @@ export const ChessHUD: React.FC = () => {
             </div>
             <div className="text-left">
               <h1 className="font-serif font-bold text-xs tracking-wider text-zinc-100 uppercase leading-tight">
-                Xadrez 3D Brasil
+                SMRT Chess
               </h1>
               <div className="flex items-center gap-1.5 text-[9px] text-amber-300 font-medium">
                 <span

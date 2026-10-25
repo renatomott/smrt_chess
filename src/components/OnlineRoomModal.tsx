@@ -188,7 +188,7 @@ export const OnlineRoomModal: React.FC = () => {
               {shareableUrl && (
                 <a
                   href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                    `Te desafio para uma partida de Xadrez 3D Online agora! Clique no link para entrar na minha sala: ${shareableUrl}`
+                    `Te desafio para uma partida de SMRT Chess online agora! Clique no link para entrar na minha sala: ${shareableUrl}`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
