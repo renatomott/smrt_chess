@@ -168,6 +168,19 @@ export const ChessHUD: React.FC = () => {
             </div>
           </button>
 
+          {/* Quick Online Challenge Shortcut */}
+          {gameMode !== 'pvp_online' && (
+            <button
+              onClick={() => setIsOnlineModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-semibold text-xs shadow-lg transition-all cursor-pointer group"
+              title="Convidar amigo para jogar online à distância"
+            >
+              <Globe2 className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+              <span className="hidden sm:inline">Jogar Online</span>
+              <span className="sm:hidden">Online</span>
+            </button>
+          )}
+
           {/* Theme / Club Switcher Button */}
           <button
             onClick={() => setIsThemeModalOpen(true)}
