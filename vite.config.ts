@@ -18,7 +18,8 @@ export default defineConfig(() => {
           'apple-touch-icon.png',
           'pwa-192x192.png',
           'pwa-512x512.png',
-          'stockfish-engine.js',
+          'stockfish/stockfish-19-lite-single.js',
+          'stockfish/stockfish-19-lite-single.wasm',
         ],
         manifest: {
           id: '/',
@@ -54,7 +55,9 @@ export default defineConfig(() => {
           ],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,wasm}'],
+          // O Stockfish lite (.wasm) tem ~1,8 MB: cabe no cache para jogar contra o computador offline.
+          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         },
         devOptions: {
           enabled: true,
