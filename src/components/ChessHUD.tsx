@@ -4,6 +4,7 @@ import type { CameraPreset } from '../game/chessTypes';
 import { DIFFICULTY_CONFIGS } from '../engine/engineTypes';
 import { ChessClock } from './ChessClock';
 import { CapturedPiecesBar } from './CapturedPiecesBar';
+import { PWAInstallButton } from './PWAInstallButton';
 import {
   RotateCcw,
   Undo2,
@@ -180,6 +181,9 @@ export const ChessHUD: React.FC = () => {
               <span className="sm:hidden">Online</span>
             </button>
           )}
+
+          {/* PWA Install Button (Prompt & Guide) */}
+          <PWAInstallButton />
 
           {/* Theme / Club Switcher Button */}
           <button

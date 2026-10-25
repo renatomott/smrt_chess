@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18181b"/>
+      <stop offset="50%" stop-color="#09090b"/>
+      <stop offset="100%" stop-color="#040405"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="35%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Base Rounded Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  
+  <!-- Subtle Outer Border Accent -->
+  <rect x="12" y="12" width="488" height="488" rx="100" fill="none" stroke="url(#goldGrad)" stroke-width="4" stroke-opacity="0.4"/>
+  <rect x="24" y="24" width="464" height="464" rx="88" fill="none" stroke="#27272a" stroke-width="1.5"/>
+
+  <!-- Radial Glow Behind the Piece -->
+  <circle cx="256" cy="240" r="160" fill="url(#glowGrad)"/>
+
+  <!-- Chessboard Grid Pattern Accent (Subtle) -->
+  <g opacity="0.07" stroke="#ffffff" stroke-width="2">
+    <line x1="136" y1="96" x2="136" y2="416"/>
+    <line x1="216" y1="96" x2="216" y2="416"/>
+    <line x1="296" y1="96" x2="296" y2="416"/>
+    <line x1="376" y1="96" x2="376" y2="416"/>
+    <line x1="96" y1="176" x2="416" y2="176"/>
+    <line x1="96" y1="256" x2="416" y2="256"/>
+    <line x1="96" y1="336" x2="416" y2="336"/>
+  </g>
+
+  <!-- SMRT Chess Knight (Cavalo) Icon Silhouette -->
+  <g filter="url(#shadow)" transform="translate(0, -8)">
+    <!-- Base Pedestal -->
+    <path d="M140 404 C 140 392, 160 384, 256 384 C 352 384, 372 392, 372 404 L 382 424 C 382 432, 360 436, 256 436 C 152 436, 130 432, 130 424 Z" fill="url(#goldGrad)"/>
+    <path d="M168 376 C 168 370, 190 366, 256 366 C 322 366, 344 370, 344 376 L 350 388 C 350 392, 320 396, 256 396 C 192 396, 162 392, 162 388 Z" fill="#b45309"/>
+
+    <!-- Main Knight Body -->
+    <path d="M 210 364
+             C 190 330, 175 290, 172 250
+             C 170 216, 185 186, 206 160
+             C 214 150, 226 138, 230 120
+             C 232 110, 230 96, 226 84
+             C 236 90, 252 104, 260 122
+             C 264 116, 276 104, 290 102
+             C 294 114, 292 128, 288 138
+             C 318 152, 346 178, 350 212
+             C 352 232, 340 248, 318 252
+             C 292 256, 274 246, 272 244
+             C 266 264, 280 274, 296 280
+             C 324 290, 342 320, 346 364
+             Z" 
+          fill="url(#goldGrad)"/>
+
+    <!-- Knight Muzzle and Jaw Definition -->
+    <path d="M 206 160
+             C 192 178, 178 206, 182 234
+             C 184 250, 196 258, 214 256
+             C 236 254, 250 242, 256 230
+             C 246 226, 236 216, 234 200
+             C 232 186, 240 174, 250 168
+             C 236 164, 220 162, 206 160 Z"
+          fill="#fef08a" opacity="0.45"/>
+
+    <!-- Eye of the Knight -->
+    <ellipse cx="232" cy="176" rx="8" ry="12" transform="rotate(-15 232 176)" fill="#09090b"/>
+    <circle cx="234" cy="173" r="3" fill="#fbbf24"/>
+
+    <!-- Mane Grooves (Estilo Moderno Lapidado) -->
+    <path d="M 276 148 C 298 170, 310 196, 314 224" fill="none" stroke="#78350f" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M 288 190 C 306 214, 314 242, 316 270" fill="none" stroke="#78350f" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 302 246 C 316 272, 322 302, 324 334" fill="none" stroke="#78350f" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <!-- Modern Crown Emblem on Top (Small Accent) -->
+  <path d="M 230 68 L 242 82 L 256 64 L 270 82 L 282 68 L 280 92 L 232 92 Z" fill="#fbbf24" filter="url(#shadow)"/>
+  
+  <!-- "SMRT" Typography at Bottom Edge -->
+  <text x="256" y="474" text-anchor="middle" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-weight="900" font-size="28" letter-spacing="8" fill="#fef08a" opacity="0.95">SMRT CHESS</text>
+</svg>
